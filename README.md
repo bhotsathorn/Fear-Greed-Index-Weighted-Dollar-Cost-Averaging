@@ -1,7 +1,6 @@
 # Fear-Greed-Index-Weighted-Dollar-Cost-Averaging
 
 Backtest of a **Fear & Greed Index (FGI)-weighted dollar-cost averaging (DCA)** strategy on the S&P 500 (SPY), compared with regular DCA.
-Code for a school STEM project.
 
 > **สรุปภาษาไทย:** โปรเจกต์นี้ทดสอบย้อนหลังว่าการปรับเงินลงทุนรายสัปดาห์ตามดัชนี CNN Fear & Greed (ซื้อเพิ่มตอนกลัว งดซื้อตอนโลภ) ให้ผลตอบแทนปรับความเสี่ยงดีกว่า DCA ปกติหรือไม่
 > ผลคือ **ไม่พบความได้เปรียบอย่างมีนัยสำคัญทางสถิติ** (ดูหัวข้อ Results) ข้อมูลและวิธีการทั้งหมดทำซ้ำได้ด้วยสคริปต์ `fgi_dca_v2.py`
