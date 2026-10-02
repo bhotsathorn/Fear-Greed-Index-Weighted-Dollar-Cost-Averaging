@@ -1,0 +1,4 @@
+Strategy,Sharpe,CAGR(TWR) %,MaxDD %,Total invested $,Final value $,Final / invested
+Regular DCA,0.802,13.99,-31.83,822000,2923806,3.557
+FGI-DCA constrained,0.802,13.97,-31.7,822000,2923781,3.557
+FGI-DCA unconstrained,0.802,13.99,-31.83,1102037,3958157,3.592
