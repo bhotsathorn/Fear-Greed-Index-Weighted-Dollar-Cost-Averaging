@@ -1,0 +1,1 @@
+# Fear-Greed-Index-Weighted-Dollar-Cost-Averaging
