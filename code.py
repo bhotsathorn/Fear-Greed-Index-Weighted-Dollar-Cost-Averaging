@@ -1,18 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-FGI-DCA backtest v2
-
-สิ่งที่แก้จากเวอร์ชันเดิม
-1) ตรวจว่า FGI "ค้าง" (ถูก ffill ยาว ๆ) หรือไม่ แล้วตัดข้อมูลส่วนที่ค้างทิ้งพร้อมเตือน
-2) คิดผลตอบแทนแบบ time-weighted (ตัดเงินที่เติมเข้าพอร์ตทุกสัปดาห์ออก)
-   เดิมใช้ pct_change ของมูลค่าพอร์ต -> CAGR/Sharpe พองมาก (CAGR 400%+)
-3) walk-forward แบบ nested: เลือกพารามิเตอร์จากช่วง train เท่านั้น แล้วทดสอบช่วง test
-   ช่วง test ไม่ซ้อนกัน แล้วนำผล OOS มาต่อกันเป็นชุดเดียว
-4) block bootstrap (12 สัปดาห์) ตามที่รายงานบทที่ 3 ระบุ + paired t-test + Wilcoxon
-5) เงินสดที่ยังไม่ลงทุนได้ดอกเบี้ย T-bill (^IRX) ไม่ใช่ 0%
-6) เปรียบเทียบกรณี จำกัด/ไม่จำกัด เงินลงทุน (วัตถุประสงค์ข้อ 2)
-7) กราฟไม่ใช้ emoji (เดิมขึ้นเป็นกล่อง)
-"""
 import os
 import itertools
 import warnings
@@ -39,7 +24,6 @@ BLOCK = 12                  # block bootstrap (สัปดาห์)
 N_BOOT = 10000
 SEED = 42
 
-# grid หยาบขึ้นเพื่อลด data mining และให้รันเร็ว (รวมค่า 1.0 = "ไม่ใช้ Panic/Boost")
 GRID = dict(
     s=[20, 25, 30, 35, 40, 45, 50],
     w=[5, 10, 15, 20, 25],
@@ -63,16 +47,13 @@ CNN_URL = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata/{start
 CACHE = "fgi_cache.csv"
 
 # CNN API ส่ง "ค่าเติมช่องว่าง" ช่วง 2020-09-19 -> 2020-12-31 (ไต่จาก ~0 แล้วล็อกที่ 50.0)
-# จึงถือว่าช่วงนี้ไม่มีข้อมูล FGI ที่เชื่อถือได้ (ตรวจจากผลวินิจฉัยจริง)
+# จึงถือว่าช่วงนี้ไม่มีข้อมูล FGI ที่เชื่อถือได้
 CNN_BAD_START = "2020-09-19"
 CNN_TRUST_FROM = "2021-01-01"
 ALL_PARTS = ("fear", "greed", "panic", "boost")   # ส่วนประกอบของกลยุทธ์ (ใช้ใน ablation)
 PLATEAU_MIN_RUN = 5           # ค่าเดิมซ้ำ >= 5 วันทำการติดกัน = ค่าเติมช่องว่าง -> ตั้งเป็น NaN
 
-
-# ------------------------------------------------------------------
 # 1. DATA
-# ------------------------------------------------------------------
 def mask_plateaus(series, min_run=5):
     """ตั้งค่าที่ซ้ำกันติดต่อกัน >= min_run แถวเป็น NaN (สัญญาณของค่าเติมช่องว่าง)"""
     run_id = (series != series.shift()).cumsum()
@@ -197,9 +178,7 @@ def diagnose_fgi(data):
     print(f"\nช่วงข้อมูลที่ใช้: {data.index.min().date()} -> {data.index.max().date()}  ({len(data)} สัปดาห์)")
 
 
-# ------------------------------------------------------------------
 # 2. STRATEGY + METRICS
-# ------------------------------------------------------------------
 def r_base(fgi, s, w, fear=True, greed=True):
     """น้ำหนักฐานตาม FGI  fear=เพิ่มเมื่อ FGI<s   greed=ลด/งดซื้อเมื่อ FGI>=s+w (Greed Lockout)
     หมายเหตุ: สูตรตรงกับโค้ดเดิม (คูณ 2) ให้เช็กว่าตรงกับสูตรในรายงานบทที่ 3
@@ -298,10 +277,7 @@ def metrics(ret, rf, periods=52):
         "CVaR95": r[r <= q].mean(),
     }
 
-
-# ------------------------------------------------------------------
 # 3. NESTED WALK-FORWARD
-# ------------------------------------------------------------------
 def grid_list():
     keys = list(GRID.keys())
     return [dict(zip(keys, v)) for v in itertools.product(*GRID.values())]
@@ -367,9 +343,7 @@ def walk_forward(data):
     return pd.DataFrame(rows), oos, last_best
 
 
-# ------------------------------------------------------------------
 # 4. STATISTICS
-# ------------------------------------------------------------------
 def block_bootstrap_delta_sharpe(ra, rb, rf, block=BLOCK, B=N_BOOT, seed=SEED):
     n = len(ra)
     nb = int(np.ceil(n / block))
@@ -418,9 +392,7 @@ def constraint_comparison(data, params):
     return pd.DataFrame(rows)
 
 
-# ------------------------------------------------------------------
-# 5. PLOTS (ไม่มี emoji)
-# ------------------------------------------------------------------
+# 5. PLOTS
 def make_plots(data, oos, wf_df, res):
     import matplotlib
     matplotlib.use("Agg")
@@ -464,9 +436,8 @@ def make_plots(data, oos, wf_df, res):
     print("saved fgi_dca_v2_results.png")
 
 
-# ------------------------------------------------------------------
 # 5b. ABLATION  (พารามิเตอร์กำหนดล่วงหน้าจากโซนของ CNN ไม่ optimize)
-# ------------------------------------------------------------------
+
 # CNN: Extreme Fear < 25, Fear 25-44, Neutral 45-55, Greed 56-75, Extreme Greed > 75
 PRESETS = {
     "A (lockout>=75, x1.5)": dict(s=45, w=20, P_thr=25, P_mult=1.5, B_mult=1.5),   # หลัก
@@ -559,9 +530,7 @@ def ablation_report(data):
     plot_ablation(data, *first)
 
 
-# ------------------------------------------------------------------
 # 6. MAIN
-# ------------------------------------------------------------------
 def report(data):
     wf_df, oos, last_best = walk_forward(data)
     print("\n" + "=" * 70)
