@@ -93,7 +93,7 @@ Bootstrap seed is fixed (`SEED = 42`). Results can still change if the upstream 
 
 ## Report
 
-The full write-up (Thai) is in `report/` *(add the PDF here)*.
+The full write-up (Thai) is in `report/` *()*.
 
 ## References
 
@@ -102,7 +102,3 @@ The full write-up (Thai) is in `report/` *(add the PDF here)*.
 - Kapalczynski, A., & Lien, D. (2021). Effectiveness of augmented dollar-cost averaging. *North American Journal of Economics and Finance, 56*, 101370.
 
 See the report for the complete list.
-
-## License
-
-MIT (code only). Market data belongs to its respective providers.
